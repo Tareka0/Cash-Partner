@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Al Ahly Cash Partner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --navy:#1A3A5C; --gold:#C8973A; --green:#0F6E56;
+    --red:#993C1D; --amber:#BA7517;
+    --bg:#F8F9FA; --card:#FFF; --border:#E2E6EA;
+    --text:#1C2B3A; --muted:#6B7A8D;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--text); direction:rtl; }
+
+  /* ── Top Nav ── */
+  .topnav { background:var(--navy); padding:0 24px; display:flex; align-items:center; justify-content:space-between; height:54px; }
+  .brand  { color:#fff; font-size:17px; font-weight:600; }
+  .brand-sub { color:rgba(255,255,255,0.65); font-size:12px; }
+  .nav-right { display:flex; align-items:center; gap:12px; }
+  .client-pill { background:rgba(255,255,255,0.12); border-radius:20px; padding:4px 12px 4px 4px; display:flex; align-items:center; gap:8px; }
+  .client-avatar { width:28px; height:28px; border-radius:50%; background:var(--gold); color:var(--navy); font-size:11px; font-weight:700; display:grid; place-items:center; }
+  .client-pill span { font-size:12px; color:#fff; }
+  .conn-badge { font-size:12px; color:rgba(255,255,255,0.8); }
+
+  .conn-bar { background:#fff3cd; border-bottom:1px solid #ffc107; padding:8px 24px; display:flex; align-items:center; gap:10px; font-size:13px; }
+  .conn-bar input  { flex:1; padding:5px 10px; border:1px solid #ccc; border-radius:6px; direction:ltr; font-size:13px; }
+  .conn-bar button { padding:5px 14px; border:none; border-radius:6px; cursor:pointer; font-size:13px; color:#fff; }
+
+  .tabs-bar { background:var(--card); border-bottom:1px solid var(--border); padding:0 24px; display:flex; gap:0; }
+  .tab-btn  { padding:12px 20px; font-size:13px; border:none; background:transparent; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent; }
+  .tab-btn.active { color:var(--navy); border-bottom-color:var(--navy); font-weight:600; }
+
+  .container { max-width:1100px; margin:0 auto; padding:20px; }
+  .card   { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px; }
+  .card-title { font-size:14px; font-weight:600; color:var(--navy); margin-bottom:14px; }
+
+  /* ── Metrics row ── */
+  .metrics-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
+  .metric { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:15px 17px; }
+  .metric-label { font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .metric-value { font-size:26px; font-weight:600; color:var(--navy); }
+  .metric-note  { font-size:12px; margin-top:3px; }
+  .up    { color:var(--green); }
+  .warn  { color:var(--amber); }
+
+  /* ── Holdings table ── */
+  .holdings-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .holdings-table thead tr { background:var(--bg); }
+  .holdings-table th { padding:8px 10px; text-align:right; color:var(--muted); font-weight:500; font-size:12px; border-bottom:1px solid var(--border); }
+  .holdings-table td { padding:9px 10px; border-bottom:1px solid var(--border); }
+  .holdings-table tr:last-child td { border-bottom:none; }
+  .fund-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-left:6px; }
+
+  /* ── Simulator ── */
+  .sim-grid { display:grid; grid-template-columns:1fr 1.3fr; gap:16px; }
+  .form-label { font-size:12px; color:var(--muted); margin-bottom:5px; display:block; }
+  .form-row { margin-bottom:12px; }
+  .inp { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-size:13px; font-family:inherit; }
+  .btn-primary { width:100%; padding:10px; background:var(--navy); color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer; margin-top:4px; }
+  .result-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:12px; display:none; }
+  .result-box.show { display:block; }
+  .rec-card { background:#EBF5FB; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .rec-name  { font-size:14px; font-weight:600; color:var(--navy); }
+  .rec-type  { font-size:12px; color:var(--muted); margin-top:2px; }
+  .rec-yield { font-size:20px; font-weight:700; color:var(--green); }
+
+  /* ── Reports ── */
+  .report-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:12px; }
+  .report-header { display:flex; justify-content:space-between; margin-bottom:8px; }
+  .report-title  { font-size:14px; font-weight:600; color:var(--navy); }
+  .report-date   { font-size:12px; color:var(--muted); }
+  .report-body   { font-size:13px; color:var(--text); line-height:1.7; }
+  .tag { display:inline-block; font-size:11px; background:#EBF5FB; color:#1A3A5C; border-radius:20px; padding:2px 10px; margin-top:8px; }
+  .priority-high   { background:#fdecea; color:#b71c1c; }
+  .priority-medium { background:#fff8e1; color:#e65100; }
+  .priority-low    { background:#e8f5e9; color:#1b5e20; }
+
+  .loading { text-align:center; padding:30px; color:var(--muted); }
+  .spinner { width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 8px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  @media(max-width:768px){ .metrics-row{ grid-template-columns:1fr 1fr; } .sim-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div>
+    <div class="brand">Al Ahly Cash Partner</div>
+    <div class="brand-sub">Client Advisory Portal — AFIM</div>
+  </div>
+  <div class="nav-right">
+    <div class="client-pill">
+      <div class="client-avatar" id="client-init">—</div>
+      <span id="client-name-display">اختر عميل</span>
+    </div>
+    <span class="conn-badge" id="conn-status">⏳ انتظار</span>
+  </div>
+</nav>
+
+<!--
+  ╔════════════════════════════════════════════════════╗
+  ║  STEP 1: Run cash_partner.py in Google Colab       ║
+  ║  STEP 2: Copy the ngrok URL from the last cell     ║
+  ║  STEP 3: Paste it below, then click "اتصال"       ║
+  ╚════════════════════════════════════════════════════╝
+-->
+<div class="conn-bar">
+  <span>🔗 رابط API:</span>
+  <input id="api-url" type="text" placeholder="https://xxxx.ngrok-free.app" value="http://localhost:5002"/>
+  <button style="background:var(--navy);" onclick="connectAPI()">اتصال</button>
+  <button style="background:#6c757d;"    onclick="useMockData()">بيانات تجريبية</button>
+  <span style="margin-right:8px;">العميل:</span>
+  <select id="client-select" style="padding:5px 10px; border:1px solid #ccc; border-radius:6px; font-size:13px;" onchange="loadClient(this.value)">
+    <option value="C001">شركة مصر للمقاولات</option>
+    <option value="C002">مجموعة النيل للاستثمار</option>
+    <option value="C003">د. أحمد المهندس</option>
+  </select>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="showTab('perf',  this)">📈 أداء المحفظة</button>
+  <button class="tab-btn"        onclick="showTab('sim',   this)">🔮 محاكي الاستثمار</button>
+  <button class="tab-btn"        onclick="showTab('report',this)">📄 التقارير الاستشارية</button>
+</div>
+
+<div class="container">
+
+  <!-- ══ TAB 1: Performance ══ -->
+  <div class="panel active" id="tab-perf">
+    <div class="metrics-row">
+      <div class="metric"><div class="metric-label">إجمالي المحفظة</div><div class="metric-value" id="m-port">—</div><div class="metric-note up" id="m-port-d">—</div></div>
+      <div class="metric"><div class="metric-label">العوائد المحققة (YTD)</div><div class="metric-value" id="m-ytd">—</div><div class="metric-note up" id="m-ytd-pct">—</div></div>
+      <div class="metric"><div class="metric-label">عائد الشهر الحالي</div><div class="metric-value" id="m-monthly">—</div><div class="metric-note" id="m-monthly-d">معدل شهري</div></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1.6fr 1fr; gap:16px;">
+      <div class="card">
+        <div class="card-title">أداء المحفظة — 6 أشهر</div>
+        <div style="position:relative; height:200px;">
+          <canvas id="perfChart"></canvas>
+        </div>
+        <div style="display:flex; gap:14px; font-size:11px; color:var(--muted); margin-top:8px;">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--navy);margin-left:4px;"></span>قيمة المحفظة</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--gold);margin-left:4px;"></span>العوائد التراكمية</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">توزيع المحفظة الحالي</div>
+        <div id="holdings-container"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: Simulator ══ -->
+  <div class="panel" id="tab-sim">
+    <div class="sim-grid">
+      <div class="card">
+        <div class="card-title">محاكي الاستثمار الفوري</div>
+        <div class="form-row"><label class="form-label">المبلغ الفائض (مليون ج.م)</label><input class="inp" type="number" id="sim-amt" value="20" min="0.01" step="1"/></div>
+        <div class="form-row"><label class="form-label">المدة</label>
+          <select class="inp" id="sim-dur">
+            <option value="1">شهر واحد</option>
+            <option value="3" selected>3 أشهر</option>
+            <option value="6">6 أشهر</option>
+            <option value="12">سنة كاملة</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">الهدف</label>
+          <select class="inp" id="sim-goal">
+            <option value="liquidity">سيولة عالية (استرداد سريع)</option>
+            <option value="return" selected>تعظيم العائد</option>
+            <option value="balanced">توازن عائد / مخاطرة</option>
+            <option value="islamic">إسلامي</option>
+          </select>
+        </div>
+        <div class="form-row"><label class="form-label">مستوى المخاطرة</label>
+          <select class="inp" id="sim-risk">
+            <option value="low" selected>منخفضة</option>
+            <option value="mid">متوسطة</option>
+            <option value="high">مرتفعة</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="runSimulator()">احسب أفضل وعاء ↗</button>
+
+        <div class="result-box" id="sim-result">
+          <div style="font-size:13px; font-weight:600; color:var(--navy); margin-bottom:8px;">التوصية الأمثل من صناديق الأهلي</div>
+          <div class="rec-card">
+            <div><div class="rec-name" id="rec-name">—</div><div class="rec-type" id="rec-type">—</div></div>
+            <div class="rec-yield" id="rec-return">—</div>
+          </div>
+          <div style="font-size:12px; color:var(--muted); line-height:1.6;" id="rec-detail">—</div>
+          <div style="margin-top:10px; font-size:12px; font-weight:600; color:var(--text);">بدائل أخرى:</div>
+          <div id="alternatives-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">مقارنة صناديق الأهلي — العوائد السنوية</div>
+        <div style="position:relative; height:260px;"><canvas id="fundsChart"></canvas></div>
+        <div style="font-size:11px; color:var(--muted); margin-top:6px;">* عوائد سنوية تاريخية لصناديق AFIM</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 3: Reports ══ -->
+  <div class="panel" id="tab-report">
+    <div id="report-container"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+
+</div>
+
+<script>
+let API_BASE  = 'http://localhost:5002'
+let activeClient = 'C001'
+let perfChartInst = null
+let fundsChartInst = null
+
+const FUND_COLORS = ['#1A3A5C','#C8973A','#0F6E56','#534AB7','#BA7517','#888780']
+
+// ── Connection ──
+async function connectAPI() {
+  API_BASE = document.getElementById('api-url').value.trim().replace(/\/$/, '')
+  document.getElementById('conn-status').textContent = '⏳ جاري...'
+  try {
+    const res = await fetch(API_BASE + '/clients')
+    if (!res.ok) throw new Error()
+    document.getElementById('conn-status').textContent = '✅ متصل'
+    loadClient(activeClient)
+  } catch {
+    document.getElementById('conn-status').textContent = '❌ فشل'
+    alert('تأكد أن Colab شغّال والـ URL صحيح')
+  }
+}
+
+// ── Load Client Data ──
+async function loadClient(clientId) {
+  activeClient = clientId
+  document.getElementById('conn-status').textContent = '⏳ تحميل...'
+
+  try {
+    const [perf, report, funds] = await Promise.all([
+      fetch(`${API_BASE}/portfolio/${clientId}`).then(r => r.json()),
+      fetch(`${API_BASE}/report/${clientId}`).then(r => r.json()),
+      fetch(`${API_BASE}/funds`).then(r => r.json()),
+    ])
+    renderPerformance(perf)
+    renderReport(report)
+    renderFundsChart(funds)
+    document.getElementById('conn-status').textContent = '✅ محدّث'
+  } catch(e) {
+    console.error(e)
+    document.getElementById('conn-status').textContent = '❌ خطأ'
+  }
+}
+
+// ── Render Performance Tab ──
+function renderPerformance(data) {
+  document.getElementById('client-name-display').textContent = data.client_name
+  document.getElementById('client-init').textContent = data.client_name.slice(0, 2)
+
+  document.getElementById('m-port').textContent     = data.portfolio_m + 'M'
+  document.getElementById('m-ytd').textContent      = data.ytd_return_m + 'M'
+  document.getElementById('m-ytd-pct').textContent  = 'معدل عائد ' + data.ytd_return_pct + '%'
+  document.getElementById('m-monthly').textContent  = data.monthly_yield_m + 'M'
+
+  // Performance chart
+  const months = data.monthly_history.map(h => h.month)
+  const portVals = data.monthly_history.map(h => h.portfolio_value_m)
+  const retVals  = data.monthly_history.map(h => h.return_m)
+
+  const ctx = document.getElementById('perfChart').getContext('2d')
+  if (perfChartInst) perfChartInst.destroy()
+  perfChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'قيمة المحفظة', data: portVals, borderColor: '#1A3A5C', backgroundColor: 'rgba(26,58,92,0.07)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3, yAxisID: 'y' },
+        { label: 'العوائد',      data: retVals,  borderColor: '#C8973A', backgroundColor: 'transparent',           fill: false, tension: 0.4, borderWidth: 2, pointRadius: 3, borderDash: [4,3], yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y:  { ticks: { font:{size:10}, callback: v => v+'M' }, position: 'right' },
+        y2: { ticks: { font:{size:10}, callback: v => v+'M', color:'#C8973A' }, position: 'left', grid: { display:false } },
+        x:  { ticks: { font:{size:10} } }
+      }
+    }
+  })
+
+  // Holdings table
+  const container = document.getElementById('holdings-container')
+  container.innerHTML = `
+    <table class="holdings-table">
+      <thead><tr><th>الوعاء</th><th>المبلغ</th><th>النسبة</th><th>العائد</th></tr></thead>
+      <tbody>
+        ${data.holdings.map((h, i) => `
+          <tr>
+            <td><span class="fund-dot" style="background:${FUND_COLORS[i % FUND_COLORS.length]};"></span>${h.name}</td>
+            <td>${h.amount_m}M</td>
+            <td>${h.pct}%</td>
+            <td style="color:var(--green); font-weight:600;">${h.yield_pct}%</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+// ── Render Funds Chart ──
+function renderFundsChart(funds) {
+  const ctx = document.getElementById('fundsChart').getContext('2d')
+  if (fundsChartInst) fundsChartInst.destroy()
+  fundsChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: funds.map(f => f.name.split('(')[0].trim().slice(0, 12)),
+      datasets: [{ label: 'العائد السنوي %', data: funds.map(f => f.yield_pct), backgroundColor: FUND_COLORS, borderRadius: 5 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + '%' } } },
+      scales: {
+        x: { ticks: { font:{size:10} }, grid: { display:false } },
+        y: { ticks: { font:{size:10}, callback: v => v+'%' }, min: 0, max: 32 }
+      }
+    }
+  })
+}
+
+// ── Simulator ──
+async function runSimulator() {
+  const amount   = document.getElementById('sim-amt').value
+  const duration = document.getElementById('sim-dur').value
+  const goal     = document.getElementById('sim-goal').value
+  const risk     = document.getElementById('sim-risk').value
+
+  try {
+    let data
+    if (API_BASE !== 'http://localhost:5002') {
+      const res = await fetch(`${API_BASE}/simulate?amount=${amount}&duration=${duration}&goal=${goal}&risk=${risk}`)
+      data = await res.json()
+    } else {
+      data = mockSimulate(amount, duration, goal)
+    }
+    renderSimResult(data)
+  } catch(e) { renderSimResult(mockSimulate(amount, duration, goal)) }
+}
+
+function renderSimResult(data) {
+  document.getElementById('rec-name').textContent   = data.recommended_fund
+  document.getElementById('rec-type').textContent   = data.fund_type
+  document.getElementById('rec-return').textContent = '+' + data.expected_return_m + 'M'
+  document.getElementById('rec-detail').textContent =
+    `عائد سنوي: ${data.annual_yield_pct}% | السيولة: ${data.liquidity_days} يوم | العائد الفعلي على المدة: ${data.effective_rate_pct}%`
+
+  document.getElementById('alternatives-list').innerHTML = (data.alternatives || []).slice(1).map(a => `
+    <div style="display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid var(--border);">
+      <span style="color:var(--text);">${a.name}</span>
+      <span style="color:var(--green); font-weight:600;">${a.yield}% | ${a.expected_return_m}M</span>
+    </div>
+  `).join('')
+
+  document.getElementById('sim-result').classList.add('show')
+}
+
+// ── Report Tab ──
+function renderReport(report) {
+  const container = document.getElementById('report-container')
+  const summary   = report.summary
+  const recs      = report.recommendations || []
+
+  container.innerHTML = `
+    <div class="report-card">
+      <div class="report-header">
+        <div class="report-title">📋 ${report.report_id} — تقرير شهري</div>
+        <span class="report-date">${report.generated_at}</span>
+      </div>
+      <div class="report-body">
+        <strong>${report.client_name}</strong> — إجمالي المحفظة: <strong>${summary.portfolio_m}M ج.م</strong><br/>
+        عوائد محققة: <strong style="color:var(--green);">${summary.ytd_return_m}M (${summary.ytd_return_pct}%)</strong>
+        &nbsp;|&nbsp; التقييم العام: <strong>${summary.status}</strong>
+      </div>
+    </div>
+    ${recs.map(r => `
+      <div class="report-card">
+        <div class="report-header">
+          <div class="report-title">توصية [${r.type}]</div>
+          <span class="tag priority-${r.priority.toLowerCase()}">${r.priority}</span>
+        </div>
+        <div class="report-body">${r.message}</div>
+      </div>
+    `).join('')}
+  `
+}
+
+// ── Mock Data ──
+function useMockData() {
+  document.getElementById('conn-status').textContent = '📊 تجريبي'
+  const perf = {
+    client_name: 'شركة مصر للمقاولات', portfolio_m: 84.5,
+    ytd_return_m: 11.3, ytd_return_pct: 22.4, monthly_yield_m: 0.94,
+    monthly_history: ['نوفمبر','ديسمبر','يناير','فبراير','مارس','أبريل'].map((m, i) => ({
+      month: m, return_m: +(0.7 + i * 0.05).toFixed(2), portfolio_value_m: +(78 + i * 1.3).toFixed(1)
+    })),
+    holdings: [
+      { name: 'صندوق الأهلي الأول', amount_m: 35, pct: 41.4, yield_pct: 24.5 },
+      { name: 'أذون خزانة',         amount_m: 22, pct: 26.0, yield_pct: 27.8 },
+      { name: 'صندوق الأهلي الثالث',amount_m: 15, pct: 17.8, yield_pct: 19.2 },
+      { name: 'احتياطي نقدي',       amount_m: 12.5, pct:14.8, yield_pct: 0 },
+    ]
+  }
+  const funds = Object.entries({
+    'الأهلي الأول': 24.5, 'الأهلي الثاني': 22.1,
+    'الأهلي الثالث': 19.2, 'بشائر': 23.4, 'دهب': 18.0, 'أذون خزانة': 27.8
+  }).map(([name, y]) => ({ name, yield_pct: y }))
+
+  const report = {
+    report_id: 'RPT-C001-202604', generated_at: '12 أبريل 2026',
+    client_name: 'شركة مصر للمقاولات',
+    summary: { portfolio_m: 84.5, ytd_return_m: 11.3, ytd_return_pct: 22.4, status: 'جيد' },
+    recommendations: [
+      { priority: 'HIGH',   type: 'reallocation',     message: 'نسبة الاحتياطي النقدي (14.8%) يمكن تخفيضها. نوصي بتوجيه 5M نحو أذون الخزانة للاستفادة من عائد 27.8%.' },
+      { priority: 'MEDIUM', type: 'yield_improvement', message: 'عائد المحفظة (22.4%) أقل من المتوسط السوقي. إعادة التوزيع ستضيف ~1.2% للعائد المرجح.' },
+    ]
+  }
+  renderPerformance(perf)
+  renderFundsChart(funds)
+  renderReport(report)
+  document.getElementById('client-name-display').textContent = 'شركة مصر للمقاولات'
+  document.getElementById('client-init').textContent = 'شم'
+}
+
+function mockSimulate(amount, duration, goal) {
+  const maps = {
+    liquidity: { recommended_fund: 'صندوق الأهلي الأول (نقدي)', fund_type: 'نقدي — استرداد يومي',      annual_yield_pct: 24.5, liquidity_days: 1 },
+    return:    { recommended_fund: 'أذون خزانة 91 يوم',         fund_type: 'حكومي — عائد مضمون',       annual_yield_pct: 27.8, liquidity_days: 91 },
+    balanced:  { recommended_fund: 'صندوق الأهلي الثالث',       fund_type: 'متوازن — تنويع حقيقي',      annual_yield_pct: 19.2, liquidity_days: 7  },
+    islamic:   { recommended_fund: 'صندوق بشائر (إسلامي)',       fund_type: 'إسلامي — وفق الشريعة',      annual_yield_pct: 23.4, liquidity_days: 7  },
+  }
+  const m = maps[goal] || maps.return
+  return {
+    ...m,
+    expected_return_m: +(amount * m.annual_yield_pct / 100 * duration / 12).toFixed(2),
+    effective_rate_pct: +(m.annual_yield_pct * duration / 12).toFixed(1),
+    alternatives: [
+      { name: 'صندوق الأهلي الأول', yield: 24.5, expected_return_m: +(amount * 0.245 * duration/12).toFixed(2) },
+      { name: 'صندوق بشائر',         yield: 23.4, expected_return_m: +(amount * 0.234 * duration/12).toFixed(2) },
+    ]
+  }
+}
+
+// ── Tab Switching ──
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+  btn.classList.add('active')
+  document.getElementById('tab-' + name).classList.add('active')
+}
+
+window.onload = () => { connectAPI(); }
+</script>
+</body>
+</html>
